@@ -1,81 +1,49 @@
--- Roblox Local Script to highlight players with their team colors and add name tags and distance labels
+-- Roblox Local Script to highlight enemy players with their team colors and add red name tags
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Function to highlight a player with their team color and add name tag and distance label
-local function highlightPlayer(player)
+-- Function to highlight an enemy player with their team color and add a red name tag
+local function highlightEnemyPlayer(player)
     -- Ensure the player has a character and a humanoid
     if player and player.Character and player.Character:FindFirstChild("Humanoid") then
         local character = player.Character
         
-        -- Check if the player has a team and get the team color
-        local teamColor
-        if player.Team then
-            teamColor = player.Team.TeamColor.Color
-        else
-            -- Default color if player has no team
-            teamColor = Color3.new(1, 1, 1)
+        -- Check if the player is in the enemy team
+        if player.Team ~= LocalPlayer.Team then
+            -- Get the team color
+            local teamColor = player.Team.TeamColor.Color
+
+            -- Create a Highlight instance
+            local highlight = Instance.new("Highlight")
+            highlight.FillColor = teamColor
+            highlight.OutlineColor = teamColor
+            highlight.Parent = character
+            
+            -- Create a BillboardGui for the name tag
+            local nameTagGui = Instance.new("BillboardGui")
+            nameTagGui.Name = "NameTag"
+            nameTagGui.Adornee = character:FindFirstChild("Head")
+            nameTagGui.Size = UDim2.new(0, 20, 0, 4) -- Adjust size as needed
+            nameTagGui.StudsOffset = Vector3.new(0, 2, 0)
+            nameTagGui.AlwaysOnTop = true
+            nameTagGui.Parent = character
+
+            local nameTagLabel = Instance.new("TextLabel")
+            nameTagLabel.Parent = nameTagGui
+            nameTagLabel.Size = UDim2.new(1, 0, 1, 0)
+            nameTagLabel.BackgroundTransparency = 1
+            nameTagLabel.TextColor3 = Color3.new(1, 0, 0) -- Red color
+            nameTagLabel.Text = player.Name
+            nameTagLabel.TextScaled = true
         end
-
-        -- Create a Highlight instance
-        local highlight = Instance.new("Highlight")
-        highlight.FillColor = teamColor
-        highlight.OutlineColor = teamColor
-        highlight.Parent = character
-
-        -- Create a BillboardGui for the name tag
-        local nameTagGui = Instance.new("BillboardGui")
-        nameTagGui.Name = "NameTag"
-        nameTagGui.Adornee = character:FindFirstChild("Head")
-        nameTagGui.Size = UDim2.new(0, 30, 0, 15) -- Smaller size
-        nameTagGui.StudsOffset = Vector3.new(0, 2, 0)
-        nameTagGui.AlwaysOnTop = true
-
-        local nameTagLabel = Instance.new("TextLabel")
-        nameTagLabel.Parent = nameTagGui
-        nameTagLabel.Size = UDim2.new(1, 0, 1, 0)
-        nameTagLabel.BackgroundTransparency = 1
-        nameTagLabel.TextColor3 = Color3.new(1, 0, 0) -- Red color
-        nameTagLabel.Text = player.Name
-        nameTagLabel.TextScaled = true
-
-        nameTagGui.Parent = character
-
-        -- Create a BillboardGui for the distance label
-        local distanceGui = Instance.new("BillboardGui")
-        distanceGui.Name = "DistanceTag"
-        distanceGui.Adornee = character:FindFirstChild("HumanoidRootPart")
-        distanceGui.Size = UDim2.new(0, 30, 0, 15) -- Smaller size
-        distanceGui.StudsOffset = Vector3.new(0, -2, 0)
-        distanceGui.AlwaysOnTop = true
-
-        local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Parent = distanceGui
-        distanceLabel.Size = UDim2.new(1, 0, 1, 0)
-        distanceLabel.BackgroundTransparency = 1
-        distanceLabel.TextColor3 = Color3.new(1, 0, 0) -- Red color
-        distanceLabel.Text = "Distance: "
-        distanceLabel.TextScaled = true
-
-        distanceGui.Parent = character
-
-        -- Update the distance label
-        local function updateDistance()
-            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
-                distanceLabel.Text = string.format("Distance: %.0f", distance)
-            end
-        end
-
-        game:GetService("RunService").RenderStepped:Connect(updateDistance)
     end
 end
 
--- Function to update all player highlights
-local function updateAllPlayerHighlights()
+-- Function to update all enemy player highlights
+local function updateAllEnemyPlayerHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            highlightPlayer(player)
+            highlightEnemyPlayer(player)
         end
     end
 end
@@ -83,7 +51,7 @@ end
 -- Update highlights when a new player is added
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
-        highlightPlayer(player)
+        highlightEnemyPlayer(player)
     end)
 end)
 
@@ -93,9 +61,9 @@ Players.PlayerRemoving:Connect(function(player)
         return
     end
     player.TeamChanged:Connect(function()
-        highlightPlayer(player)
+        highlightEnemyPlayer(player)
     end)
 end)
 
--- Initial update of all player highlights
-updateAllPlayerHighlights()
+-- Initial update of all enemy player highlights
+updateAllEnemyPlayerHighlights()
